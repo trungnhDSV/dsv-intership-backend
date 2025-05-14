@@ -1,10 +1,40 @@
-import { Module } from '@nestjs/common';
+import { Module, ValidationPipe } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { UsersModule } from './users/users.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { APP_PIPE } from '@nestjs/core';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
-  imports: [],
+  imports: [
+    UsersModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
+    }),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const env = config.get<string>('NODE_ENV');
+        const uri = config.get<string>('MONGO_URI');
+        console.log(`🔗 Connecting to MongoDB for ${env}...`);
+        return {
+          uri,
+        };
+      },
+    }),
+  ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_PIPE,
+      useValue: new ValidationPipe({
+        whitelist: true,
+      }),
+    },
+  ],
 })
 export class AppModule {}
