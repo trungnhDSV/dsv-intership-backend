@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
-import { AuthService } from 'src/users/auth.service';
+import { AuthService } from 'src/auth/auth.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/schemas/user.schema';
 import { JwtModule } from '@nestjs/jwt';
@@ -20,6 +20,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     }),
   ],
   controllers: [UsersController],
-  providers: [UsersService, AuthService],
+  providers: [UsersService],
+  exports: [UsersService],
 })
 export class UsersModule {}

@@ -27,9 +27,6 @@ export class User extends Document {
 
   @Prop({ required: true })
   provider: 'credentials' | 'google';
-
-  @Prop({ default: false })
-  emailVerified: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

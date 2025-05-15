@@ -1,52 +1,19 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  UseGuards,
-  Session,
-} from '@nestjs/common';
-import { plainToInstance } from 'class-transformer';
-import { AuthGuard } from 'src/common/auth/auth.guard';
-import { AuthService } from 'src/users/auth.service';
-import { CreateUserDto } from 'src/users/dtos/create-user.dto';
-import { UsersService } from 'src/users/users.service';
+import { Controller, Get, UseGuards, Req } from '@nestjs/common';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { UsersService } from './users.service';
 
-@Controller('auth')
+@Controller('users')
+@UseGuards(JwtAuthGuard)
 export class UsersController {
-  constructor(
-    private readonly usersService: UsersService,
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly usersService: UsersService) {}
 
-  @Get('/whoami')
-  @UseGuards(AuthGuard)
-  async whoAmI() {
+  @Get('me')
+  async getProfile(@Req() req) {
+    const userId = req.user.userId;
     return {
-      message: 'Hello from whoami',
+      status: 'success',
     };
+    return this.usersService.find(userId);
   }
-
-  @Post('/signup')
-  async signUp(@Body() body: CreateUserDto, @Session() session: any) {
-    const data = await this.authService.signUp(body);
-    // session.userId = user._id;
-    console.log('session', session);
-    console.log('user in controller: ', data.user);
-    console.log('return to FE', {
-      token: data.token,
-      user: data.user.toJSON(),
-    });
-    return {
-      token: data.token,
-      user: data.user.toJSON(),
-    };
-  }
-
-  @Post('/signin')
-  async signin(@Body() body: { email: string; password: string }) {
-    const data = await this.authService.signIn(body.email, body.password);
-    console.log(data);
-    return data;
-  }
+  // Add more routes like update profile, change password, etc.
 }
