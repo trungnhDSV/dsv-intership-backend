@@ -1,28 +1,15 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Get,
-  UseGuards,
-  Req,
-  Query,
-  Res,
-  BadRequestException,
-} from '@nestjs/common';
+import { Controller, Post, Body, Get, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from 'src/users/dtos/create-user.dto';
 import { SignInDto } from 'src/auth/dtos/sign-in.dto';
 import { User } from 'src/schemas/user.schema';
 import { ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { create } from 'domain';
 import { OAuthCheckDto } from 'src/auth/dtos/oauth-check.dto';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   // private readonly logger = new Logger(AuthController.name);
-  private readonly frontendUrl = process.env.FRONTEND_URL;
-
   constructor(private readonly authService: AuthService) {}
 
   @Post('signup')
@@ -57,6 +44,12 @@ export class AuthController {
       credentials.password,
     );
   }
+  @Post('verify-login')
+  async verifyLogin(@Body('token') token: string) {
+    const user = await this.authService.verifyLogin(token);
+    console.log('Google login', user);
+    return user;
+  }
 
   @Post('verify')
   @ApiResponse({
@@ -87,12 +80,6 @@ export class AuthController {
   async resendVerification(@Query('email') email: string) {
     await this.authService.resendVerificationEmail(email);
     return { success: true, message: 'Verification email resent' };
-  }
-
-  @Post('verify-login')
-  async verifyLogin(@Body('token') token: string) {
-    const user = await this.authService.verifyLogin(token);
-    return user;
   }
 
   @Post('oauth-check')

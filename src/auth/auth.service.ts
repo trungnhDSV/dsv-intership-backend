@@ -39,6 +39,10 @@ export class AuthService {
       console.error('PASSWORD NOT VALID');
       throw new UnauthorizedException('Wrong password');
     }
+    console.log('Normal login', {
+      token: 'random token',
+      user,
+    });
 
     return {
       token: this.generateJwt(user),
