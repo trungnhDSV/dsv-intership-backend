@@ -47,7 +47,7 @@ export class AuthController {
   @Post('verify-login')
   async verifyLogin(@Body('token') token: string) {
     const user = await this.authService.verifyLogin(token);
-    console.log('Google login', user);
+    console.log('Verify email and login', user);
     return user;
   }
 
