@@ -15,6 +15,7 @@ import { SignInDto } from 'src/auth/dtos/sign-in.dto';
 import { User } from 'src/schemas/user.schema';
 import { ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { create } from 'domain';
+import { OAuthCheckDto } from 'src/auth/dtos/oauth-check.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -92,6 +93,11 @@ export class AuthController {
   async verifyLogin(@Body('token') token: string) {
     const user = await this.authService.verifyLogin(token);
     return user;
+  }
+
+  @Post('oauth-check')
+  async checkOauthEmail(@Body() body: OAuthCheckDto) {
+    return this.authService.checkOauthEmail(body.email, body.fullName);
   }
 
   @Get('test-expired-token')

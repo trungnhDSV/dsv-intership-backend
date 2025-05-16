@@ -179,6 +179,30 @@ export class AuthService {
     }
   }
 
+  async checkOauthEmail(email: string, fullName: string) {
+    const user = await this.usersService.find(email);
+    if (user && user.provider === 'credentials') {
+      console.warn('[OAuth Check] Blocked sign-in for credentials user');
+      throw new BadRequestException(
+        'This email is already registered. Please sign in with your email and password',
+      );
+    }
+    if (user && user.provider === 'google') {
+      return { ok: true };
+    }
+    try {
+      const newUser = await this.usersService.create({
+        email,
+        fullName,
+        provider: 'google',
+      });
+      return { ok: true, user: newUser };
+    } catch (error) {
+      console.error('Error creating user', error);
+      throw new ConflictException('Error creating user');
+    }
+  }
+
   generateJwt(user: User) {
     return this.jwtService.sign(
       {

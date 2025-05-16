@@ -26,11 +26,17 @@ export class ResponseTransformInterceptor implements NestInterceptor {
               ? response
               : (response as any).message || 'Something went wrong';
 
-          return throwError(() => ({
-            status: 'error',
-            code: status,
-            message,
-          }));
+          return throwError(
+            () =>
+              new HttpException(
+                {
+                  status: 'error',
+                  code: status,
+                  message,
+                },
+                status,
+              ),
+          );
         }
 
         return throwError(() => ({
