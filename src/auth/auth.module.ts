@@ -5,25 +5,26 @@ import { UsersModule } from 'src/users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
-import { MongooseModule } from '@nestjs/mongoose';
-import {
-  EmailVerification,
-  EmailVerificationSchema,
-} from '../schemas/email-verification.schema';
-import { EmailVerificationService } from 'src/auth/email-verification.service';
-import { EmailService } from 'src/auth/email.service';
+import { MailModule } from 'src/mail/mail.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ResponseTransformInterceptor } from 'src/common/interceptors/response-transform.interceptor';
 
 @Module({
   imports: [
     UsersModule,
+    MailModule,
     PassportModule,
     JwtModule.register({}), // Token config sẽ nằm trong JwtStrategy
-    MongooseModule.forFeature([
-      { name: EmailVerification.name, schema: EmailVerificationSchema },
-    ]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, EmailVerificationService, EmailService],
-  exports: [AuthService, EmailVerificationService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseTransformInterceptor,
+    },
+  ],
+  exports: [AuthService],
 })
 export class AuthModule {}

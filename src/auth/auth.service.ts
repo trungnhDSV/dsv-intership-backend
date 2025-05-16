@@ -11,22 +11,21 @@ import {
 } from '../common/helpers/hash.helper';
 import { UsersService } from 'src/users/users.service';
 import { CreateUserDto } from 'src/users/dtos/create-user.dto';
-
 import { JwtService } from '@nestjs/jwt';
 import { User } from 'src/schemas/user.schema';
-import { EmailVerificationService } from 'src/auth/email-verification.service';
 import {
   JWT_ACTIVE_EXPIRATION,
   JWT_MAIL_VALIDATE_EXPIRATION,
   SHORT_JWT_EXPIRATION,
 } from 'src/constants/JWTExpiredTime';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-    private emailVerificationService: EmailVerificationService,
+    private mailService: MailService,
   ) {}
   async signIn(email: string, password: string) {
     const user = await this.usersService.find(email);
@@ -79,71 +78,105 @@ export class AuthService {
 
     const expiresAt = new Date(Date.now() + expirationSeconds * 1000);
 
-    const user = await this.emailVerificationService.create({
+    const user = await this.mailService.create({
       email: body.email,
       fullName: body.fullName,
       password: result,
       token,
       expiresAt,
     });
-    await this.emailVerificationService.sendVerificationEmail(
-      body.email,
-      token,
-    );
-    return { message: 'Verification email sent' };
+    await this.mailService.sendVerificationEmail(body.email, token);
+    return user;
+  }
+  async verifyLogin(token: string) {
+    let payload: { email: string; fullName: string };
+
+    try {
+      payload = this.jwtService.verify(token, {
+        secret: process.env.JWT_SECRET,
+      });
+    } catch (err) {
+      console.error('Invalid token', err);
+      if (err.name === 'TokenExpiredError') {
+        throw new BadRequestException('Token đã hết hạn');
+      }
+      throw new BadRequestException('Token không hợp lệ');
+    }
+
+    const user = await this.usersService.find(payload.email);
+    if (!user) {
+      throw new NotFoundException('Người dùng không tồn tại');
+    }
+
+    const loginToken = this.generateJwt(user);
+
+    return {
+      token: loginToken,
+      user,
+    };
   }
 
   async resendVerificationEmail(email: string) {
-    const record = await this.emailVerificationService.findByEmail(email);
+    const record = await this.mailService.findByEmail(email);
     if (!record) {
       throw new NotFoundException('User not found');
     }
     if (record.isUsed) {
       throw new BadRequestException('Email already verified');
     }
-    const token = this.jwtService.sign(
+    const newToken = this.jwtService.sign(
       {
         email: record.email,
         fullName: record.fullName,
-        password: record.password,
       },
       {
         expiresIn: JWT_MAIL_VALIDATE_EXPIRATION,
         secret: process.env.JWT_SECRET,
       },
     );
-    await this.emailVerificationService.sendVerificationEmail(
-      record.email,
-      token,
-    );
+    await this.mailService.sendVerificationEmail(record.email, newToken);
     return { message: 'Verification email resent' };
   }
 
   async verifyEmail(token: string) {
-    console.log('VERIFY: token', token);
-    const record = await this.emailVerificationService.findByToken(token);
+    try {
+      let payload: {
+        email: string;
+        fullName: string;
+      };
+      payload = this.jwtService.verify(token, {
+        secret: process.env.JWT_SECRET,
+      });
+      const mailVerifiRecord = await this.mailService.findByEmail(
+        payload.email,
+      );
+      if (!mailVerifiRecord) {
+        console.error('token not found');
+        throw new NotFoundException('token not found');
+      }
+      if (mailVerifiRecord.isUsed) {
+        console.error('Email already verified');
+        throw new BadRequestException('Email already verified');
+      }
+      await this.mailService.markUsed(token);
+      const user = await this.usersService.create({
+        email: mailVerifiRecord.email,
+        fullName: mailVerifiRecord.fullName,
+        password: mailVerifiRecord.password,
+        provider: 'credentials',
+      });
 
-    console.log('record', record);
-
-    if (!record || record.isUsed || record.expiresAt < new Date()) {
-      throw new BadRequestException('Token expired or invalid');
+      return {
+        token: this.generateJwt(user),
+        user,
+      };
+    } catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        throw new BadRequestException('Token đã hết hạn');
+      }
+      console.error('Invalid token', error);
+      throw new BadRequestException('Invalid token');
     }
-
-    const user = await this.usersService.create({
-      email: record.email,
-      fullName: record.fullName,
-      password: record.password,
-      provider: 'credentials',
-    });
-    // delete email verification record
-    await this.emailVerificationService.deleteByToken(token);
-
-    await this.emailVerificationService.markUsed(token);
-
-    return {
-      token: this.generateJwt(user),
-      user,
-    };
   }
 
   generateJwt(user: User) {

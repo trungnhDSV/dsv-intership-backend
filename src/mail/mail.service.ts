@@ -2,14 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { EmailVerification } from '../schemas/email-verification.schema';
 import { Model } from 'mongoose';
-import { EmailService } from 'src/auth/email.service';
-
+import { MailSenderService } from './mail-sender.service';
 @Injectable()
-export class EmailVerificationService {
+export class MailService {
   constructor(
     @InjectModel(EmailVerification.name)
     private readonly evModel: Model<EmailVerification>,
-    private readonly emailService: EmailService,
+    private readonly mailSenderSevice: MailSenderService,
   ) {
     this.evModel.collection.createIndex(
       { expiresAt: 1 },
@@ -35,14 +34,6 @@ export class EmailVerificationService {
     return this.evModel.updateOne({ token }, { isUsed: true });
   }
 
-  async isTokenValid(token: string) {
-    const record = await this.findByToken(token);
-    if (!record || record.isUsed || record.expiresAt < new Date()) {
-      return false;
-    }
-    return true;
-  }
-
   async findByEmail(email: string) {
     return this.evModel.findOne({
       email,
@@ -55,7 +46,7 @@ export class EmailVerificationService {
       throw new Error('Email already verified');
     }
     try {
-      this.emailService.sendVerificationEmail(email, token);
+      this.mailSenderSevice.sendVerificationEmail(email, token);
       if (record) {
         await this.evModel.updateOne(
           {
