@@ -39,6 +39,10 @@ export class AuthService {
       console.error('PASSWORD NOT VALID');
       throw new UnauthorizedException('Wrong password');
     }
+    console.log('----------Normal login------------', {
+      token: 'random token',
+      user,
+    });
 
     return {
       token: this.generateJwt(user),
@@ -105,7 +109,7 @@ export class AuthService {
 
     const user = await this.usersService.find(payload.email);
     if (!user) {
-      throw new NotFoundException('Người dùng không tồn tại');
+      throw new NotFoundException('User not found');
     }
 
     const loginToken = this.generateJwt(user);
@@ -158,7 +162,7 @@ export class AuthService {
         console.error('Email already verified');
         throw new BadRequestException('Email already verified');
       }
-      await this.mailService.markUsed(token);
+      await this.mailService.deleteByToken(token);
       const user = await this.usersService.create({
         email: mailVerifiRecord.email,
         fullName: mailVerifiRecord.fullName,
