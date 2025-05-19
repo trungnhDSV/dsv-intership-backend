@@ -5,9 +5,9 @@ import mongoose, { Document } from 'mongoose';
   toJSON: {
     transform: (_, ret) => {
       ret.id = ret._id;
+      ret.name = ret.name.replace('.pdf', '');
       delete ret._id;
       delete ret.__v;
-      delete ret.s3Key;
       return ret;
     },
   },
@@ -27,6 +27,12 @@ export class PDFDocument extends Document {
 
   @Prop({ type: Date, default: Date.now })
   uploadedAt: Date;
+
+  @Prop({ type: String })
+  ownerName: string;
+
+  // @Prop({ type: String })
+  // ownerAvatar: string;
 }
 
 export const PDFDocumentSchema = SchemaFactory.createForClass(PDFDocument);

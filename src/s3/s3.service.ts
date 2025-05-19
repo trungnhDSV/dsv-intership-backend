@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { randomUUID } from 'crypto';
 
@@ -29,5 +33,17 @@ export class S3Service {
 
     const url = await getSignedUrl(this.s3, command, { expiresIn: 60 });
     return { url, s3Key };
+  }
+
+  async generatePresignedGetUrl(s3Key: string): Promise<string> {
+    console.log('Generating presigned URL for S3 key:', s3Key);
+    const command = new GetObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET_NAME!,
+      Key: s3Key,
+    });
+
+    return await getSignedUrl(this.s3, command, {
+      expiresIn: 300, // URL có hiệu lực 5 phút
+    });
   }
 }
