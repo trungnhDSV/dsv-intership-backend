@@ -7,6 +7,8 @@ import { APP_PIPE } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { MailModule } from './mail/mail.module';
+import { PdfDocumentModule } from './pdf-document/pdf-document.module';
+import { S3Module } from './s3/s3.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { MailModule } from './mail/mail.module';
       },
     }),
     MailModule,
+    PdfDocumentModule,
+    S3Module,
   ],
   controllers: [AppController],
   providers: [
