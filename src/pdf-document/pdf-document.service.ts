@@ -50,6 +50,7 @@ export class PdfDocumentService {
         .limit(limit),
       this.pdfModel.countDocuments({ ownerId }),
     ]);
+    console.log('TOTAL Documents founded:', total);
     return { documents, total };
   }
 }

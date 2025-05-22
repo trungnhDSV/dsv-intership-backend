@@ -23,18 +23,11 @@ export class PdfDocumentController {
     @Query('offset') offset = '0',
     @Query('sortOrder') sortOrder: 'asc' | 'desc' = 'desc',
   ) {
-    console.log('getAllByOwner', {
-      ownerId,
-      limit,
-      offset,
-      sortOrder,
-    });
     return this.pdfService.getPdfDocs(ownerId, +limit, +offset, sortOrder);
   }
 
   @Get('presign')
   async getPresignedUrl(@Query('s3Key') s3Key: string) {
-    console.log('getPresignedUrl', { s3Key });
     if (!s3Key) {
       throw new Error('s3Key is required');
     }
