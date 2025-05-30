@@ -13,4 +13,10 @@ export class UsersService {
     const user = new this.userModel(data);
     return user.save();
   }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userModel.findOne({
+      email,
+    });
+  }
 }

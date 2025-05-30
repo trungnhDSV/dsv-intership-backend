@@ -1,5 +1,6 @@
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
+import { DocumentMember, DocumentMemberSchema } from './document-member.schema';
 
 @Schema({
   toJSON: {
@@ -17,7 +18,7 @@ export class PDFDocument extends Document {
   name: string;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
-  ownerId: string;
+  ownerId: mongoose.Schema.Types.ObjectId;
 
   @Prop({ type: Number })
   fileSize?: number;
@@ -31,8 +32,8 @@ export class PDFDocument extends Document {
   @Prop({ type: String })
   ownerName: string;
 
-  // @Prop({ type: String })
-  // ownerAvatar: string;
+  @Prop({ type: [DocumentMemberSchema], default: [] })
+  members: DocumentMember[];
 }
 
 export const PDFDocumentSchema = SchemaFactory.createForClass(PDFDocument);

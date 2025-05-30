@@ -7,6 +7,7 @@ import {
   PDFDocumentSchema,
 } from 'src/schemas/pdf-document.schema';
 import { User, UserSchema } from 'src/schemas/user.schema';
+import { Annotation, AnnotationSchema } from 'src/schemas/annotation.schema';
 import { S3Service } from 'src/s3/s3.service';
 
 @Module({
@@ -16,6 +17,7 @@ import { S3Service } from 'src/s3/s3.service';
     MongooseModule.forFeature([
       { name: PDFDocument.name, schema: PDFDocumentSchema },
       { name: User.name, schema: UserSchema },
+      { name: Annotation.name, schema: AnnotationSchema },
     ]),
   ],
 })

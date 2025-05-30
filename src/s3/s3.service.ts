@@ -17,6 +17,14 @@ export class S3Service {
     },
   });
 
+  constructor() {
+    if (!process.env.AWS_S3_BUCKET_NAME) {
+      throw new Error(
+        'AWS_S3_BUCKET_NAME is undefined! Please set it in your environment.',
+      );
+    }
+  }
+
   async generateSingleUploadUrl(
     fileName: string,
     fileType: string,
@@ -45,5 +53,20 @@ export class S3Service {
     return await getSignedUrl(this.s3, command, {
       expiresIn: 300, // URL có hiệu lực 5 phút
     });
+  }
+
+  async uploadXFDF(key: string, xfdf: string): Promise<string> {
+    const putCommand = new PutObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: key,
+      Body: xfdf,
+      ContentType: 'application/vnd.adobe.xfdf',
+    });
+    console.log('Uploading XFDF to S3 with key:', key);
+    await this.s3.send(putCommand);
+
+    console.log('DEBUG', key);
+    // Trả về URL hoặc key tuỳ bạn
+    return `https://${process.env.AWS_S3_BUCKET_NAME}.s3.amazonaws.com/${key}`;
   }
 }
