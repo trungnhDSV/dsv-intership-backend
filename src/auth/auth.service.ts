@@ -192,7 +192,7 @@ export class AuthService {
       );
     }
     if (user && user.provider === 'google') {
-      return { ok: true };
+      return { ok: true, user: user, token: this.generateJwt(user) };
     }
     try {
       const newUser = await this.usersService.create({
@@ -200,7 +200,11 @@ export class AuthService {
         fullName,
         provider: 'google',
       });
-      return { ok: true, user: newUser };
+      return {
+        ok: true,
+        user: newUser,
+        token: this.generateJwt(newUser),
+      };
     } catch (error) {
       console.error('Error creating user', error);
       throw new ConflictException('Error creating user');

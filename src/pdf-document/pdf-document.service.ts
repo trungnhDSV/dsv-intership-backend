@@ -13,6 +13,7 @@ export interface MemberInfoDto {
   fullName: string;
   email: string;
   role: 'owner' | 'viewer' | 'editor';
+  id: string;
 }
 
 @Injectable()
@@ -35,6 +36,37 @@ export class PdfDocumentService {
       uploadedAt: new Date(),
     });
     return data;
+  }
+
+  async getAccessibleDocs(
+    userId: string,
+    limit = 10,
+    offset = 0,
+    sortOrder: 'asc' | 'desc' = 'desc',
+  ) {
+    // Query: doc mà (ownerId = userId) hoặc (members có userId & role = viewer/editor)
+    // Sử dụng $or để lấy cả 2 loại
+
+    const objUserId = new mongoose.Types.ObjectId(userId);
+
+    return this.pdfModel
+      .find({
+        $or: [
+          { ownerId: objUserId },
+          {
+            members: {
+              $elemMatch: {
+                userId: objUserId,
+                role: { $in: ['editor', 'viewer'] },
+              },
+            },
+          },
+        ],
+      })
+      .sort({ uploadedAt: sortOrder === 'asc' ? 1 : -1 })
+      .skip(offset)
+      .limit(limit)
+      .exec();
   }
 
   async getPdfDoc(id: string): Promise<PDFDocument> {
@@ -75,6 +107,7 @@ export class PdfDocumentService {
       fullName: m.userId.fullName,
       email: m.userId.email,
       role: m.role,
+      id: m.userId._id.toString(),
     }));
 
     return [
@@ -82,6 +115,7 @@ export class PdfDocumentService {
         fullName: owner.fullName,
         email: owner.email,
         role: 'owner',
+        id: owner.id.toString(),
       },
       ...members,
     ];

@@ -7,14 +7,16 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CreatePDFDocumentDto } from 'src/pdf-document/dtos/create-pdf-document.dto';
 import { PdfDocumentService } from 'src/pdf-document/pdf-document.service';
 import { S3Service } from 'src/s3/s3.service';
 import { Annotation } from 'src/schemas/annotation.schema';
-
+@UseGuards(JwtAuthGuard)
 @Controller('documents')
 export class PdfDocumentController {
   constructor(
@@ -37,7 +39,14 @@ export class PdfDocumentController {
     @Query('offset') offset = '0',
     @Query('sortOrder') sortOrder: 'asc' | 'desc' = 'desc',
   ) {
-    return this.pdfService.getPdfDocs(ownerId, +limit, +offset, sortOrder);
+    const doc = await this.pdfService.getAccessibleDocs(
+      ownerId,
+      +limit,
+      +offset,
+      sortOrder,
+    );
+    console.log('Get all documents by owner', doc);
+    return { documents: doc, total: doc.length };
   }
 
   @Get('presign')
