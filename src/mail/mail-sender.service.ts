@@ -19,14 +19,25 @@ export class MailSenderService {
     const verifyUrl = `${process.env.APP_URL}/verify?token=${token}`;
 
     await this.transporter.sendMail({
-      from: '"LuminPDF" <no-reply@luminpdf.com>',
+      from: '"LuminPDF Support" <no-reply@luminpdf.com>',
       to,
-      subject: 'Verify your email',
+      subject: 'Please verify your email address',
       html: `
-        <p>Welcome!</p>
-        <p>Click here to verify your email:</p>
-        <a href="${verifyUrl}">${verifyUrl}</a>
-        <p>This link will expire in 10 minutes.</p>
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+          <h2>Welcome to LuminPDF!</h2>
+          <p>Thank you for signing up.</p>
+          <p>To get started, please verify your email address by clicking the button below:</p>
+          <p style="text-align: center;">
+            <a href="${verifyUrl}" style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">
+              Verify Email
+            </a>
+          </p>
+          <p>If the button doesn't work, copy and paste the following URL into your browser:</p>
+          <p><a href="${verifyUrl}">${verifyUrl}</a></p>
+          <p><small>This link will expire in 10 minutes.</small></p>
+          <hr />
+          <p style="font-size: 12px; color: #999;">If you did not request this, please ignore this email.</p>
+        </div>
       `,
     });
 
