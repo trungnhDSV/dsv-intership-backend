@@ -11,6 +11,5 @@ export class CreateUserDto {
 
   @ApiProperty({ example: '12345678' })
   @IsString()
-  @MinLength(8)
   fullName: string;
 }
