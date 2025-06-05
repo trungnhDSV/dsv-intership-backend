@@ -40,8 +40,8 @@ export class PdfDocumentService {
 
   async getAccessibleDocs(
     userId: string,
-    limit = 10,
-    offset = 0,
+    limit?: number,
+    offset?: number,
     sortOrder: 'asc' | 'desc' = 'desc',
   ) {
     // Query: doc mà (ownerId = userId) hoặc (members có userId & role = viewer/editor)
@@ -49,6 +49,35 @@ export class PdfDocumentService {
 
     const objUserId = new mongoose.Types.ObjectId(userId);
 
+    console.log(
+      'Fetching documents for userId:',
+      'limit:',
+      limit,
+      'offset:',
+      offset,
+    );
+
+    console.log(limit, offset);
+
+    if (limit === undefined || offset === undefined)
+      return this.pdfModel
+        .find({
+          $or: [
+            { ownerId: objUserId },
+            {
+              members: {
+                $elemMatch: {
+                  userId: objUserId,
+                  role: { $in: ['editor', 'viewer'] },
+                },
+              },
+            },
+          ],
+        })
+        .sort({ uploadedAt: sortOrder === 'asc' ? 1 : -1 })
+        .exec();
+
+    console.log('Fetching documents with limit and offset:');
     return this.pdfModel
       .find({
         $or: [

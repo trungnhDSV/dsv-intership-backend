@@ -45,8 +45,18 @@ export class PdfDocumentController {
       +offset,
       sortOrder,
     );
-    console.log('Get all documents by owner', doc);
+    console.log('Get documents by owner w limit:', limit, 'offset:', offset);
+    console.log('Documents found:', doc.length);
     return { documents: doc, total: doc.length };
+  }
+  @Get('count')
+  async getTotalDocs(@Query('ownerId') ownerId: string) {
+    if (!ownerId) {
+      throw new Error('ownerId is required');
+    }
+    const total = await this.pdfService.getAccessibleDocs(ownerId);
+    console.log('Total documents for owner:', ownerId, 'is', total.length);
+    return { total: total.length };
   }
 
   @Get('presign')
