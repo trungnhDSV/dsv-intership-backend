@@ -1,6 +1,10 @@
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
 import { DocumentMember, DocumentMemberSchema } from './document-member.schema';
+import {
+  GoogleDriveInfo,
+  GoogleDriveInfoSchema,
+} from 'src/pdf-document/google-drive-info.schema';
 
 @Schema({
   toJSON: {
@@ -34,6 +38,9 @@ export class PDFDocument extends Document {
 
   @Prop({ type: [DocumentMemberSchema], default: [] })
   members: DocumentMember[];
+
+  @Prop({ type: GoogleDriveInfoSchema, _id: false })
+  googleDrive?: GoogleDriveInfo;
 }
 
 export const PDFDocumentSchema = SchemaFactory.createForClass(PDFDocument);

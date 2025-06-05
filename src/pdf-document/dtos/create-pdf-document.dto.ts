@@ -1,5 +1,30 @@
 // src/documents/dto/create-pdf-document.dto.ts
-import { IsNotEmpty, IsString, IsOptional, IsNumber } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  IsNumber,
+  ValidateNested,
+} from 'class-validator';
+
+class GoogleDriveInfo {
+  @IsNotEmpty()
+  @IsString()
+  fileId: string;
+
+  @IsNotEmpty()
+  @IsString()
+  email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  accountId: string;
+
+  @IsOptional()
+  @IsString()
+  mimeType?: string;
+}
 
 export class CreatePDFDocumentDto {
   @IsNotEmpty()
@@ -17,4 +42,9 @@ export class CreatePDFDocumentDto {
   @IsOptional()
   @IsNumber()
   fileSize?: number;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => GoogleDriveInfo)
+  googleDrive?: GoogleDriveInfo;
 }
